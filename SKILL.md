@@ -121,9 +121,11 @@ net_margin = net_income / revenue * 100
 current_ratio = current_assets / current_liabilities * 100
 debt_ratio = total_liabilities / total_assets * 100
 
-# ROE、ROA（簡化估算）
-roe = net_income / equity * 100
-roa = net_income / total_assets * 100
+# ROE、ROA — 必須用「平均值法」，與公開財報一致
+# 平均股東權益 = (期初 + 期末) / 2，期初 = 上一年度期末
+roe = net_income / ((equity_current + equity_prev) / 2) * 100
+roa = net_income / ((total_assets_current + total_assets_prev) / 2) * 100
+# ⚠️ 禁止用期末單一值計算，會導致結果偏高或偏低
 
 # 自由現金流
 fcf = operating_cf + capex  # capex 通常為負值
@@ -169,6 +171,25 @@ header（公司名稱 + 股票代碼 + 資料來源標注）
 - 🔵 **blue**（`border-left: 4px solid #3182ce`）：中性指標（費用率、比率）
 - 🟠 **orange**（`border-left: 4px solid #dd6b20`）：需關注（費用上升）
 - 🔴 **red**（`border-left: 4px solid #e53e3e`）：警示（虧損、高負債）
+
+### ⚠️ 數據一致性規則（最重要）
+
+所有數字必須從 Python 計算結果統一取值，**KPI 卡片、表格、圖表 JS 三處必須完全一致**，禁止手動輸入或各自計算：
+
+```
+❌ 錯誤做法：KPI 卡片寫 42.6%，表格寫 49.5%，圖表 JS 寫 49.5%（三處不同）
+✅ 正確做法：Python 算出 op_margin_2022 = 49.5%，三處都引用同一個變數值
+```
+
+建議建立一個 `metrics` 字典集中管理所有計算結果，HTML 中所有數字都從這個字典填入：
+
+```python
+metrics = {
+    '2022': {'gross_margin': 59.6, 'op_margin': 49.5, 'net_margin': 44.9, 'roe': 39.6, 'roa': 23.4, ...},
+    '2023': {'gross_margin': 54.4, 'op_margin': 42.6, 'net_margin': 38.8, 'roe': 26.0, 'roa': 16.0, ...},
+    '2024': {'gross_margin': 56.1, 'op_margin': 45.7, 'net_margin': 40.5, 'roe': 30.1, 'roa': 19.2, ...},
+}
+```
 
 ### 常見 HTML 格式錯誤（務必避免）
 
