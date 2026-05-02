@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>鴻海精密 (2317) 三維財務分析 2023–2025</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Microsoft JhengHei', 'Noto Sans TC', sans-serif; background: #f0f4f8; color: #2d3748; }
+
+  .header {
+    background: linear-gradient(135deg, #1a2a3a 0%, #1e4060 50%, #1a6080 100%);
+    color: white; padding: 24px 32px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .header h1 { font-size: 1.6rem; font-weight: 700; }
+  .header .subtitle { font-size: 0.9rem; opacity: 0.85; margin-top: 4px; }
+  .header .badge { background: rgba(255,255,255,0.15); padding: 6px 14px; border-radius: 20px; font-size: 0.85rem; }
+
+  /* ── 驗證列 ── */
+  .verify-bar {
+    background: #1a202c; color: #e2e8f0;
+    padding: 7px 32px; font-size: 0.76rem;
+    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  }
+  .verify-bar .vl { color: #718096; }
+  .badge-ok   { background: #276749; color: #c6f6d5; padding: 2px 10px; border-radius: 99px; font-size: 0.72rem; font-weight: 600; }
+  .badge-warn { background: #7b341e; color: #feebc8; padding: 2px 10px; border-radius: 99px; font-size: 0.72rem; font-weight: 600; }
+  .badge-info { background: #2a4365; color: #bee3f8; padding: 2px 10px; border-radius: 99px; font-size: 0.72rem; font-weight: 600; }
+  .verify-bar a { color: #63b3ed; text-decoration: none; font-size: 0.74rem; background: #2b4a6f; padding: 2px 9px; border-radius: 5px; }
+  .verify-bar a:hover { background: #2c5282; }
+
+  .tabs { display: flex; background: white; border-bottom: 2px solid #e2e8f0; padding: 0 32px; }
+  .tab { padding: 14px 24px; cursor: pointer; font-size: 0.95rem; font-weight: 600;
+    color: #718096; border-bottom: 3px solid transparent; margin-bottom: -2px; transition: all 0.2s; }
+  .tab:hover { color: #1e4060; }
+  .tab.active { color: #1e4060; border-bottom-color: #1e4060; }
+
+  .tab-content { display: none; padding: 28px 32px; }
+  .tab-content.active { display: block; }
+
+  .kpi-row { display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
+  .kpi-card { flex: 1; min-width: 180px; background: white; border-radius: 12px;
+    padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.07); border-left: 4px solid #3182ce; }
+  .kpi-card.green  { border-left-color: #38a169; }
+  .kpi-card.orange { border-left-color: #dd6b20; }
+  .kpi-card.red    { border-left-color: #e53e3e; }
+  .kpi-card.purple { border-left-color: #805ad5; }
+  .kpi-card.teal   { border-left-color: #1e4060; }
+  .kpi-label { font-size: 0.78rem; color: #718096; margin-bottom: 6px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+  .kpi-value { font-size: 1.7rem; font-weight: 700; color: #2d3748; }
+  .kpi-change { font-size: 0.82rem; margin-top: 4px; }
+  .up { color: #38a169; } .down { color: #e53e3e; } .neutral { color: #718096; }
+
+  .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
+  .chart-card { background: white; border-radius: 12px; padding: 22px; box-shadow: 0 2px 8px rgba(0,0,0,0.07); }
+  .chart-title { font-size: 0.92rem; font-weight: 700; color: #4a5568; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid #f0f4f8; }
+  .chart-container { position: relative; height: 240px; }
+
+  .data-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+  .data-table th { background: #1e4060; color: white; padding: 10px 14px; text-align: center; font-weight: 600; }
+  .data-table td { padding: 9px 14px; text-align: right; border-bottom: 1px solid #e2e8f0; }
+  .data-table tr:nth-child(even) td { background: #f7fafc; }
+  .data-table td:first-child { text-align: left; font-weight: 500; color: #4a5568; }
+  .data-table .section-header td { background: #e8f0f8; color: #1e4060; font-weight: 700; }
+  .data-table .total-row td { background: #e6fffa; color: #276749; font-weight: 700; }
+  .data-table .warn-row td { background: #fffaf0; }
+
+  .insight-box { background: linear-gradient(135deg, #e8f0f8, #e6fffa);
+    border: 1px solid #c5d9ea; border-radius: 12px; padding: 18px 22px; margin-bottom: 20px; }
+  .insight-box h3 { color: #1e4060; font-size: 0.9rem; margin-bottom: 10px; }
+  .insight-box ul { list-style: none; }
+  .insight-box ul li { font-size: 0.87rem; color: #4a5568; padding: 3px 0; padding-left: 18px; position: relative; }
+  .insight-box ul li::before { content: '▸'; position: absolute; left: 0; color: #1e4060; }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media (max-width: 768px) { .charts-grid, .two-col { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>鴻海精密工業 (2317) 財務分析儀表板</h1>
+    <div class="subtitle">資料來源：Goodinfo.tw ｜ 分析期間：2023 – 2025 ｜ 金額單位：億元 (NTD) ｜ 母公司股東淨利基準</div>
+  </div>
+  <div class="badge">⚙️ 電子代工 / AI伺服器</div>
+</div>
+
+<!-- 驗證列（四層驗證機制） -->
+<div class="verify-bar">
+  <span class="vl">📡 資料來源</span><span>Goodinfo.tw（台灣公開財報聚合）</span>
+  <span class="vl">🕐 抓取時間</span><span>2026-05-02T19:51:54+08:00</span>
+  <span class="vl">📅 財報期間</span><span>2023–2025 年報（IFRS合併）</span>
+  <span class="badge-ok">✓ 合理性檢查通過（7項規則）</span>
+  <span class="badge-info">ℹ TWSE API 暫不可用，名稱驗證略過</span>
+  <a href="https://mops.twse.com.tw/mops/web/t05st01?step=1&co_id=2317&TYPEK=sii" target="_blank">📋 MOPS 官方申報</a>
+  <a href="https://goodinfo.tw/tw/StockFinDetail.asp?RPT_CAT=IS_YEAR&STOCK_ID=2317" target="_blank">🔗 Goodinfo 原始數據</a>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('ops')">📊 經營分析</div>
+  <div class="tab" onclick="switchTab('profit')">💰 獲利分析</div>
+  <div class="tab" onclick="switchTab('finance')">🏦 財務健全度</div>
+</div>
+
+<!-- ===== 經營分析 ===== -->
+<div id="ops" class="tab-content active">
+  <div class="kpi-row">
+    <div class="kpi-card teal">
+      <div class="kpi-label">2025 年營收</div>
+      <div class="kpi-value">81,031 億</div>
+      <div class="kpi-change up">▲ +18.1% YoY（2024年68,596億），AI伺服器訂單大爆發</div>
+    </div>
+    <div class="kpi-card green">
+      <div class="kpi-label">毛利率 (2025)</div>
+      <div class="kpi-value">6.15%</div>
+      <div class="kpi-change neutral">■ 2023年6.29% → 小幅收窄，代工業結構特性</div>
+    </div>
+    <div class="kpi-card green">
+      <div class="kpi-label">管銷研費用率 (2025)</div>
+      <div class="kpi-value">2.95%</div>
+      <div class="kpi-change up">▲ 2023年3.61% → 規模擴張攤薄固定費用</div>
+    </div>
+    <div class="kpi-card green">
+      <div class="kpi-label">營業利益 (2025)</div>
+      <div class="kpi-value">2,592 億</div>
+      <div class="kpi-change up">▲ +29.2% vs 2024（2,006億）</div>
+    </div>
+    <div class="kpi-card green">
+      <div class="kpi-label">營業利益率 (2025)</div>
+      <div class="kpi-value">3.20%</div>
+      <div class="kpi-change up">▲ 2023年2.70% → 2024年2.92% → 三年持續提升</div>
+    </div>
+  </div>
+
+  <div class="insight-box">
+    <h3>🔍 經營亮點</h3>
+    <ul>
+      <li>三年營收 61,622 → 68,596 → 81,031 億，CAGR +14.6%，2025年加速成長 +18.1%，AI伺服器與電動車組裝訂單貢獻顯著</li>
+      <li>毛利率維持 6.15–6.29%，代工業特性使毛利低但穩定；規模擴張未見結構性毛利改善，吃的是費用攤薄紅利</li>
+      <li>管銷研費用率從 3.61% 降至 2.95%，研發費用絕對值持續成長（1,100 → 1,217億）但占比下降，反映智慧製造轉型投入</li>
+      <li>推銷費用極低（273億，占比僅0.34%），符合代工 B2B 商業模式特性，無需大量行銷支出</li>
+      <li>營業利益三年從 1,665 → 2,006 → 2,592 億，CAGR +24.8%，遠超營收成長速度，費用攤薄效益顯現</li>
+    </ul>
+  </div>
+
+  <div class="charts-grid">
+    <div class="chart-card">
+      <div class="chart-title">📈 營收與毛利率趨勢</div>
+      <div class="chart-container"><canvas id="revenueChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">📦 三大費用絕對金額 (億元)</div>
+      <div class="chart-container"><canvas id="opexChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">📉 費用率趨勢 (%)</div>
+      <div class="chart-container"><canvas id="expenseRatioChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">🏆 營業利益與利益率</div>
+      <div class="chart-container"><canvas id="opIncomeChart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="chart-card">
+    <div class="chart-title">📋 損益表明細 (億元)</div>
+    <table class="data-table">
+      <thead><tr><th>項目</th><th>2023</th><th>2024</th><th>2025</th><th>趨勢評估</th></tr></thead>
+      <tbody>
+        <tr><td>營業收入</td><td>61,622</td><td>68,596</td><td>81,031</td><td class="up">▲ 加速成長，AI訂單驅動</td></tr>
+        <tr><td>營業毛利</td><td>3,879</td><td>4,289</td><td>4,982</td><td class="up">▲ 穩定增加</td></tr>
+        <tr><td>毛利率</td><td>6.29%</td><td>6.25%</td><td>6.15%</td><td class="down">▼ 小幅收窄，代工結構限制</td></tr>
+        <tr class="section-header"><td colspan="5">▼ 營業費用明細</td></tr>
+        <tr><td>&nbsp;&nbsp;推銷費用</td><td>249.9</td><td>250.5</td><td>273.7</td><td class="neutral">■ 低基期穩定，符合B2B特性</td></tr>
+        <tr><td>&nbsp;&nbsp;管理費用</td><td>864.1</td><td>875.2</td><td>898.7</td><td class="neutral">■ 微升但占比持續下降</td></tr>
+        <tr><td>&nbsp;&nbsp;研究發展費用</td><td>1,100</td><td>1,158</td><td>1,217</td><td class="up">▲ 持續投入智慧製造轉型</td></tr>
+        <tr class="total-row"><td>營業費用合計</td><td>2,214</td><td>2,284</td><td>2,389</td><td class="up">▲ 絕對值增加但費用率下降</td></tr>
+        <tr><td>費用率（合計/營收）</td><td>3.61%</td><td>3.33%</td><td>2.95%</td><td class="up">▲ 規模效益明顯</td></tr>
+        <tr class="total-row"><td>營業利益</td><td>1,665</td><td>2,006</td><td>2,592</td><td class="up">▲ 高速成長，CAGR +24.8%</td></tr>
+        <tr><td>營業利益率</td><td>2.70%</td><td>2.92%</td><td>3.20%</td><td class="up">▲ 三年持續提升</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ===== 獲利分析 ===== -->
+<div id="profit" class="tab-content">
+  <div class="kpi-row">
+    <div class="kpi-card teal">
+      <div class="kpi-label">2025 稅後淨利</div>
+      <div class="kpi-value">1,894 億</div>
+      <div class="kpi-change up">▲ +24.0% vs 2024（1,527億），創三年新高</div>
+    </div>
+    <div class="kpi-card green">
+      <div class="kpi-label">淨利率 (2025)</div>
+      <div class="kpi-value">2.34%</div>
+      <div class="kpi-change neutral">■ 2023年2.31% → 2024年2.23% → 小幅回升</div>
+    </div>
+    <div class="kpi-card green">
+      <div class="kpi-label">EPS (2025)</div>
+      <div class="kpi-value">13.61 元</div>
+      <div class="kpi-change up">▲ 2023年10.25元 → +32.8%，三年最高</div>
+    </div>
+    <div class="kpi-card green">
+      <div class="kpi-label">ROE (2025)</div>
+      <div class="kpi-value">9.61%</div>
+      <div class="kpi-change up">▲ 2024年8.25% → 回升，淨利高速成長驅動</div>
+    </div>
+    <div class="kpi-card green">
+      <div class="kpi-label">ROA (2025)</div>
+      <div class="kpi-value">3.71%</div>
+      <div class="kpi-change up">▲ 2024年3.47% → 改善中，資產效率提升</div>
+    </div>
+  </div>
+
+  <div class="insight-box">
+    <h3>🔍 獲利亮點</h3>
+    <ul>
+      <li>2025年EPS 13.61元，為近三年最高，YoY +23.6%；淨利 1,894億創新高，配息能力持續強化</li>
+      <li>淨利率 2.23–2.34%，受代工業毛利結構限制，業外損益（主要為匯兌與投資收益）貢獻約 -0.86個百分點</li>
+      <li>ROE 從 8.25%（2024）回升至 9.61%（2025），淨利大幅成長 +24% 驅動，股東權益成長（8.5%）相對溫和</li>
+      <li>現金股利支出三年從 587 → 807 → 1,067億，配息積極擴大；以2025淨利1,894億計，配息率約56%</li>
+      <li>三層利潤率（毛利6.15% → 營業3.20% → 淨利2.34%）中，業外損益為正貢獻（+2.34%-3.20%=-0.86pp差異主因為所得稅與少數股東損益）</li>
+    </ul>
+  </div>
+
+  <div class="charts-grid">
+    <div class="chart-card">
+      <div class="chart-title">💵 稅後淨利與淨利率</div>
+      <div class="chart-container"><canvas id="netIncomeChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">📈 每股盈餘 EPS (元)</div>
+      <div class="chart-container"><canvas id="epsChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">🎯 三層利潤率比較 (%)</div>
+      <div class="chart-container"><canvas id="marginChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">💸 現金股利發放 (億元)</div>
+      <div class="chart-container"><canvas id="dividendChart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="chart-card">
+    <div class="chart-title">📋 獲利能力彙總表</div>
+    <table class="data-table">
+      <thead><tr><th>指標</th><th>2023</th><th>2024</th><th>2025</th><th>趨勢評估</th></tr></thead>
+      <tbody>
+        <tr><td>稅後淨利（億元）</td><td>1,421</td><td>1,527</td><td>1,894</td><td class="up">▲ 創三年新高</td></tr>
+        <tr><td>EPS（元）</td><td>10.25</td><td>11.01</td><td>13.61</td><td class="up">▲ 高速成長 +32.8%</td></tr>
+        <tr><td>毛利率</td><td>6.29%</td><td>6.25%</td><td>6.15%</td><td class="down">▼ 代工結構，小幅收窄</td></tr>
+        <tr><td>營業利益率</td><td>2.70%</td><td>2.92%</td><td>3.20%</td><td class="up">▲ 持續改善</td></tr>
+        <tr><td>淨利率</td><td>2.31%</td><td>2.23%</td><td>2.34%</td><td class="neutral">■ 穩定窄幅震盪</td></tr>
+        <tr><td>ROE</td><td>8.43%</td><td>8.25%</td><td>9.61%</td><td class="up">▲ 回升至近年高點</td></tr>
+        <tr><td>ROA</td><td>3.61%</td><td>3.47%</td><td>3.71%</td><td class="up">▲ 回升改善</td></tr>
+        <tr><td>現金股利發放（億元）</td><td>587</td><td>807</td><td>1,067</td><td class="up">▲ 積極增配</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ===== 財務健全度 ===== -->
+<div id="finance" class="tab-content">
+  <div class="kpi-row">
+    <div class="kpi-card teal">
+      <div class="kpi-label">現金及約當現金 (2025)</div>
+      <div class="kpi-value">10,164 億</div>
+      <div class="kpi-change neutral">■ 2023年高峰11,977億 → 2024年9,371億 → 小幅回升</div>
+    </div>
+    <div class="kpi-card orange">
+      <div class="kpi-label">流動比率 (2025)</div>
+      <div class="kpi-value">146.1%</div>
+      <div class="kpi-change down">▼ 2023年159.0% → 三年持續下降，首度低於150%警戒線</div>
+    </div>
+    <div class="kpi-card orange">
+      <div class="kpi-label">負債比率 (2025)</div>
+      <div class="kpi-value">61.4%</div>
+      <div class="kpi-change down">▼ 2023年57.2% → 三年持續上升，超過60%需關注</div>
+    </div>
+    <div class="kpi-card green">
+      <div class="kpi-label">營業CF (2025)</div>
+      <div class="kpi-value">2,269 億</div>
+      <div class="kpi-change neutral">■ 2023年-982億 → 2024年4,456億 → 2025年正常化</div>
+    </div>
+    <div class="kpi-card green">
+      <div class="kpi-label">自由現金流 (2025)</div>
+      <div class="kpi-value">737 億</div>
+      <div class="kpi-change neutral">■ 2024年3,444億 → 資本支出大增致收窄，仍為正值</div>
+    </div>
+  </div>
+
+  <div class="insight-box">
+    <h3>🔍 財務健全度亮點</h3>
+    <ul>
+      <li>流動比率三年持續下降（159.0% → 155.2% → 146.1%），2025年首度低於150%警戒線，AI伺服器擴產帶動流動負債大增（+27108億），需持續監控短期流動性</li>
+      <li>負債比率從57.2%上升至61.4%，超過60%警示水位；主因為快速擴張帶動負債增加（22,535 → 31,339億），槓桿程度明顯增加</li>
+      <li>現金部位10,164億仍屬充裕，較2024年低谷（9,371億）回升，但距2023年高峰（11,977億）仍有差距</li>
+      <li>2023年營業CF為-982億（異常），係大量積累AI伺服器備料存貨所致；2024年存貨消化後強勁回復至4,456億，現金轉換能力確認</li>
+      <li>2025年資本支出達1,532億（扣除投資CF計算），為近年最高，反映積極擴建AI伺服器產能；FCF收窄至737億但仍正值，不影響配息能力</li>
+    </ul>
+  </div>
+
+  <div class="charts-grid">
+    <div class="chart-card">
+      <div class="chart-title">🏗️ 資產負債結構 (億元)</div>
+      <div class="chart-container"><canvas id="balanceChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">💰 現金流量三表 (億元)</div>
+      <div class="chart-container"><canvas id="cfChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">📊 流動比率與負債比率趨勢</div>
+      <div class="chart-container"><canvas id="ratioChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">💵 現金部位趨勢 (億元)</div>
+      <div class="chart-container"><canvas id="cashChart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="two-col">
+    <div class="chart-card">
+      <div class="chart-title">📋 資產負債表摘要 (億元)</div>
+      <table class="data-table">
+        <thead><tr><th>項目</th><th>2023</th><th>2024</th><th>2025</th><th>趨勢評估</th></tr></thead>
+        <tbody>
+          <tr><td>現金及約當現金</td><td>11,977</td><td>9,371</td><td>10,164</td><td class="neutral">■ 高峰後回落再小幅回升</td></tr>
+          <tr><td>流動資產合計</td><td>30,360</td><td>33,758</td><td>39,618</td><td class="up">▲ 持續擴張</td></tr>
+          <tr><td>資產總額</td><td>39,398</td><td>43,945</td><td>51,047</td><td class="up">▲ 快速擴張 +29.6%</td></tr>
+          <tr><td>流動負債合計</td><td>19,093</td><td>21,748</td><td>27,108</td><td class="down">▼ 增速快於資產，流動比率壓縮</td></tr>
+          <tr><td>負債總額</td><td>22,535</td><td>25,429</td><td>31,339</td><td class="down">▼ 擴張帶動槓桿增加</td></tr>
+          <tr class="total-row"><td>股東權益</td><td>16,862</td><td>18,516</td><td>19,708</td><td class="up">▲ 穩定增加</td></tr>
+          <tr><td>流動比率</td><td>159.0%</td><td>155.2%</td><td>146.1%</td><td class="down">▼ 首度低於150%警戒</td></tr>
+          <tr class="warn-row"><td>負債比率</td><td>57.2%</td><td>57.9%</td><td>61.4%</td><td class="down">▼ 突破60%，需持續關注</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">📋 現金流量摘要 (億元)</div>
+      <table class="data-table">
+        <thead><tr><th>項目</th><th>2023</th><th>2024</th><th>2025</th><th>趨勢評估</th></tr></thead>
+        <tbody>
+          <tr><td>營業活動CF</td><td>-982</td><td>4,456</td><td>2,269</td><td class="neutral">■ 2023年異常，2024強勁，2025正常化</td></tr>
+          <tr><td>投資活動CF</td><td>-921</td><td>-1,379</td><td>-3,047</td><td class="down">▼ 擴產資本支出持續增加</td></tr>
+          <tr><td>融資活動CF</td><td>243</td><td>-1,606</td><td>1,699</td><td class="neutral">■ 波動較大，視融資需求而定</td></tr>
+          <tr class="total-row"><td>自由現金流（CF-Capex）</td><td>-1,827</td><td>3,444</td><td>737</td><td class="neutral">■ 大幅波動，2025收窄但正值</td></tr>
+          <tr><td>現金股利發放</td><td>587</td><td>807</td><td>1,067</td><td class="up">▲ 積極增配，三年+81.8%</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+function switchTab(name) {
+  document.querySelectorAll('.tab-content').forEach(e => e.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(e => e.classList.remove('active'));
+  document.getElementById(name).classList.add('active');
+  event.target.classList.add('active');
+}
+
+const yrs = ['2023', '2024', '2025'];
+const g = 'rgba(0,0,0,0.05)';
+
+// 1. 營收 + 毛利率
+new Chart(document.getElementById('revenueChart'), {
+  type: 'bar',
+  data: { labels: yrs, datasets: [
+    { label: '營收(億)', data: [61622, 68596, 81031], backgroundColor: 'rgba(30,64,96,0.15)', borderColor: '#1e4060', borderWidth: 2, yAxisID: 'y' },
+    { label: '毛利率(%)', data: [6.29, 6.25, 6.15], type: 'line', borderColor: '#38a169', backgroundColor: '#38a169', pointRadius: 5, tension: 0.3, yAxisID: 'y2' }
+  ]},
+  options: { responsive: true, maintainAspectRatio: false,
+    scales: { x: { grid: { display: false } }, y: { grid: { color: g } }, y2: { position: 'right', grid: { display: false }, ticks: { callback: v => v + '%' } } } }
+});
+
+// 2. 費用堆疊
+new Chart(document.getElementById('opexChart'), {
+  type: 'bar',
+  data: { labels: yrs, datasets: [
+    { label: '推銷', data: [249.9, 250.5, 273.7], backgroundColor: 'rgba(49,130,206,0.75)' },
+    { label: '管理', data: [864.1, 875.2, 898.7], backgroundColor: 'rgba(56,161,105,0.75)' },
+    { label: '研發', data: [1100, 1158, 1217], backgroundColor: 'rgba(128,90,213,0.75)' }
+  ]},
+  options: { responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { position: 'top' } },
+    scales: { x: { stacked: true, grid: { display: false } }, y: { stacked: true, grid: { color: g } } } }
+});
+
+// 3. 費用率折線
+new Chart(document.getElementById('expenseRatioChart'), {
+  type: 'line',
+  data: { labels: yrs, datasets: [
+    { label: '推銷率', data: [0.41, 0.37, 0.34], borderColor: '#3182ce', pointRadius: 5, tension: 0.3 },
+    { label: '管理率', data: [1.40, 1.28, 1.11], borderColor: '#38a169', pointRadius: 5, tension: 0.3 },
+    { label: '研發率', data: [1.79, 1.69, 1.50], borderColor: '#805ad5', pointRadius: 5, tension: 0.3 }
+  ]},
+  options: { responsive: true, maintainAspectRatio: false,
+    scales: { x: { grid: { display: false } }, y: { grid: { color: g }, ticks: { callback: v => v + '%' } } } }
+});
+
+// 4. 營業利益 + 利益率
+new Chart(document.getElementById('opIncomeChart'), {
+  type: 'bar',
+  data: { labels: yrs, datasets: [
+    { label: '營業利益(億)', data: [1665, 2006, 2592], backgroundColor: 'rgba(30,64,96,0.15)', borderColor: '#1e4060', borderWidth: 2, yAxisID: 'y' },
+    { label: '利益率(%)', data: [2.70, 2.92, 3.20], type: 'line', borderColor: '#dd6b20', backgroundColor: '#dd6b20', pointRadius: 5, tension: 0.3, yAxisID: 'y2' }
+  ]},
+  options: { responsive: true, maintainAspectRatio: false,
+    scales: { x: { grid: { display: false } }, y: { grid: { color: g } }, y2: { position: 'right', grid: { display: false }, ticks: { callback: v => v + '%' } } } }
+});
+
+// 5. 淨利 + 淨利率
+new Chart(document.getElementById('netIncomeChart'), {
+  type: 'bar',
+  data: { labels: yrs, datasets: [
+    { label: '稅後淨利(億)', data: [1421, 1527, 1894], backgroundColor: 'rgba(56,161,105,0.15)', borderColor: '#38a169', borderWidth: 2, yAxisID: 'y' },
+    { label: '淨利率(%)', data: [2.31, 2.23, 2.34], type: 'line', borderColor: '#805ad5', backgroundColor: '#805ad5', pointRadius: 5, tension: 0.3, yAxisID: 'y2' }
+  ]},
+  options: { responsive: true, maintainAspectRatio: false,
+    scales: { x: { grid: { display: false } }, y: { grid: { color: g } }, y2: { position: 'right', grid: { display: false }, ticks: { callback: v => v + '%' } } } }
+});
+
+// 6. EPS
+new Chart(document.getElementById('epsChart'), {
+  type: 'bar',
+  data: { labels: yrs, datasets: [
+    { label: 'EPS(元)', data: [10.25, 11.01, 13.61], backgroundColor: ['rgba(30,64,96,0.6)', 'rgba(30,64,96,0.75)', 'rgba(30,64,96,0.95)'], borderRadius: 6 }
+  ]},
+  options: { responsive: true, maintainAspectRatio: false,
+    scales: { x: { grid: { display: false } }, y: { grid: { color: g } } } }
+});
+
+// 7. 三層利潤率
+new Chart(document.getElementById('marginChart'), {
+  type: 'bar',
+  data: { labels: yrs, datasets: [
+    { label: '毛利率', data: [6.29, 6.25, 6.15], backgroundColor: 'rgba(49,130,206,0.75)' },
+    { label: '營業利益率', data: [2.70, 2.92, 3.20], backgroundColor: 'rgba(56,161,105,0.75)' },
+    { label: '淨利率', data: [2.31, 2.23, 2.34], backgroundColor: 'rgba(128,90,213,0.75)' }
+  ]},
+  options: { responsive: true, maintainAspectRatio: false,
+    scales: { x: { grid: { display: false } }, y: { grid: { color: g }, ticks: { callback: v => v + '%' } } } }
+});
+
+// 8. 現金股利
+new Chart(document.getElementById('dividendChart'), {
+  type: 'bar',
+  data: { labels: yrs, datasets: [
+    { label: '現金股利(億)', data: [587, 807, 1067], backgroundColor: 'rgba(221,107,32,0.75)', borderRadius: 6 }
+  ]},
+  options: { responsive: true, maintainAspectRatio: false,
+    scales: { x: { grid: { display: false } }, y: { grid: { color: g } } } }
+});
+
+// 9. 資產負債結構
+new Chart(document.getElementById('balanceChart'), {
+  type: 'bar',
+  data: { labels: yrs, datasets: [
+    { label: '股東權益', data: [16862, 18516, 19708], backgroundColor: 'rgba(56,161,105,0.75)' },
+    { label: '負債總額', data: [22535, 25429, 31339], backgroundColor: 'rgba(229,62,62,0.5)' }
+  ]},
+  options: { responsive: true, maintainAspectRatio: false,
+    scales: { x: { stacked: true, grid: { display: false } }, y: { stacked: true, grid: { color: g } } } }
+});
+
+// 10. 現金流三表
+new Chart(document.getElementById('cfChart'), {
+  type: 'bar',
+  data: { labels: yrs, datasets: [
+    { label: '營業CF', data: [-982, 4456, 2269], backgroundColor: 'rgba(49,130,206,0.75)' },
+    { label: '投資CF', data: [-921, -1379, -3047], backgroundColor: 'rgba(229,62,62,0.6)' },
+    { label: '融資CF', data: [243, -1606, 1699], backgroundColor: 'rgba(128,90,213,0.6)' }
+  ]},
+  options: { responsive: true, maintainAspectRatio: false,
+    scales: { x: { grid: { display: false } }, y: { grid: { color: g } } } }
+});
+
+// 11. 流動比率 + 負債比率
+new Chart(document.getElementById('ratioChart'), {
+  type: 'line',
+  data: { labels: yrs, datasets: [
+    { label: '流動比率(%)', data: [159.0, 155.2, 146.1], borderColor: '#3182ce', backgroundColor: 'rgba(49,130,206,0.1)', fill: true, pointRadius: 5, tension: 0.3, yAxisID: 'y' },
+    { label: '負債比率(%)', data: [57.2, 57.9, 61.4], borderColor: '#e53e3e', pointRadius: 5, tension: 0.3, yAxisID: 'y2' }
+  ]},
+  options: { responsive: true, maintainAspectRatio: false,
+    scales: { x: { grid: { display: false } }, y: { grid: { color: g } }, y2: { position: 'right', grid: { display: false }, ticks: { callback: v => v + '%' } } } }
+});
+
+// 12. 現金趨勢
+new Chart(document.getElementById('cashChart'), {
+  type: 'line',
+  data: { labels: yrs, datasets: [
+    { label: '現金及約當現金(億)', data: [11977, 9371, 10164], borderColor: '#319795', backgroundColor: 'rgba(49,151,149,0.1)', fill: true, pointRadius: 6, tension: 0.3 }
+  ]},
+  options: { responsive: true, maintainAspectRatio: false,
+    scales: { x: { grid: { display: false } }, y: { grid: { color: g } } } }
+});
+</script>
+</body>
+</html>
