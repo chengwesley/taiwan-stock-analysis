@@ -29,11 +29,17 @@
 
 ```
 taiwan-stock-analysis/
-├── SKILL.md                        # Skill 主要說明與操作步驟
-├── scripts/
-│   └── fetch_goodinfo.py           # 財報數據抓取腳本
-└── references/
-    └── dashboard_template.md       # HTML 儀表板 CSS/JS 模板規格
+├── .claude-plugin/
+│   └── plugin.json                 # Plugin metadata
+├── README.md
+└── skills/
+    └── taiwan-stock-analysis/
+        ├── SKILL.md                    # Skill 主要說明與操作步驟
+        ├── scripts/
+        │   └── fetch_goodinfo.py       # 財報數據抓取腳本
+        └── references/
+            ├── dashboard_template.md   # HTML 儀表板 CSS/JS 模板規格
+            └── 鴻海_2317_analysis.html  # 範例輸出
 ```
 
 ## ⚙️ 技術說明
@@ -49,10 +55,14 @@ taiwan-stock-analysis/
 
 ## 🛠️ 安裝方式
 
-1. 下載 `taiwan-stock-analysis.skill` 檔案
-2. 開啟 Claude 桌面版 → Settings → Skills
-3. 匯入 `.skill` 檔案
-4. 對 Claude 說「幫我分析 XXXX」即可開始使用
+Clone 此 repo 到 Claude Code 的 plugins 目錄：
+
+```bash
+cd ~/.claude/plugins/marketplaces/claude-plugins-official/plugins/
+git clone https://github.com/chengwesley/taiwan-stock-analysis.git
+```
+
+重新啟動 Claude Code，然後對 Claude 說「幫我分析 XXXX」即可開始使用。
 
 ## 📋 生成的儀表板包含
 
