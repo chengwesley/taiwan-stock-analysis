@@ -1,0 +1,7 @@
+{
+  "name": "taiwan-stock-analysis",
+  "description": "台灣上市上櫃公司三維財務分析儀表板。從 Goodinfo.tw 抓取真實財報數據，生成互動式 HTML 儀表板（經營分析 / 獲利分析 / 財務健全度）。",
+  "author": {
+    "name": "Wesley Cheng"
+  }
+}
