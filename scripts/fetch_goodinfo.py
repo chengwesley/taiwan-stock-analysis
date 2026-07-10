@@ -35,7 +35,11 @@ def fetch_report(stock_id, rpt_cat, days_adjusted, client_key):
     return BeautifulSoup(r.text, 'html.parser')
 
 def parse_table(soup):
-    """解析 Goodinfo 財報表格，返回 {欄位名: {年度: 數值}} 的字典"""
+    """解析 Goodinfo 財報表格，返回 {欄位名: {年度: 數值}} 的字典
+
+    欄位步幅（每年佔幾欄）自動偵測：損益表/資產負債表每年佔「金額＋%」兩欄，
+    現金流量表每年僅一欄（一次列 8 年）——固定步幅 2 會造成現金流年度錯位。
+    """
     tables = soup.find_all('table')
     if len(tables) < 7:
         return {}, []
@@ -57,13 +61,17 @@ def parse_table(soup):
                     years.append(val)
             continue
 
-        if len(row_data) >= 3 and row_data[0]:
+        if len(row_data) >= 3 and row_data[0] and years:
             field_name = row_data[0]
-            values = {}
             val_cols = row_data[1:]
+            # 段落標題行（如「投資活動(金額:億元)」）的值欄位是年度本身，非數據
+            if val_cols[0] in years:
+                continue
+            stride = max(1, round(len(val_cols) / len(years)))
+            values = {}
             for j, yr in enumerate(years):
-                if j * 2 < len(val_cols):
-                    raw = val_cols[j * 2]
+                if j * stride < len(val_cols):
+                    raw = val_cols[j * stride]
                     try:
                         values[yr] = float(raw.replace(',', ''))
                     except Exception:
