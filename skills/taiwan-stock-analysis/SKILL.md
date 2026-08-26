@@ -24,7 +24,6 @@ version: 1.0.0
 - 🏦 **財務健全度**：流動比率、負債比率、現金流量、現金部位
 
 ---
-version: 1.0.0
 
 ## 步驟一：抓取財報數據
 
@@ -107,7 +106,6 @@ def get_goodinfo_data(stock_id, rpt_cat):
 > 若 `推銷費用`、`稅後淨利`、`每股稅後盈餘(元)` 等欄位名稱在特定公司財報中略有差異，需迭代所有欄位名稱以關鍵字模糊比對（如 `'推銷' in k`、`'每股' in k and '盈餘' in k`）。
 
 ---
-version: 1.0.0
 
 ## 步驟二：計算衍生指標
 
@@ -138,14 +136,12 @@ fcf = operating_cf + capex  # capex 為負值（資產增加）時 FCF = op_cf -
 ```
 
 ---
-version: 1.0.0
 
 ## 步驟二點五：三層驗證機制
 
 每次抓取完財報數據後，執行以下三層驗證，結果存入 `result['verification']`。
 
 ---
-version: 1.0.0
 
 ### A. 資料來源標注（Provenance）
 
@@ -168,7 +164,6 @@ result['metadata'] = {
 ```
 
 ---
-version: 1.0.0
 
 ### B. 合理性檢查（Sanity Check）
 
@@ -229,14 +224,12 @@ result['verification'] = {
 ```
 
 ---
-version: 1.0.0
 
 ### C. MOPS 原始申報連結
 
 `result['metadata']['mops_url']`（上市）和 `mops_url_otc`（上櫃）已在步驟 A 記錄，儀表板的驗證列中以連結按鈕呈現，讓使用者可一鍵核對原始申報。
 
 ---
-version: 1.0.0
 
 ## 步驟三：建立 HTML 儀表板
 
@@ -321,7 +314,6 @@ KPI card 的 `kpi-change` **必須包含具體數字**，不可只寫方向文�
 3. 數據表格的「趨勢評估」欄 `<td>` 需搭配顏色 class（`up`/`down`/`neutral`）
 
 ---
-version: 1.0.0
 
 ## 步驟四：Insight Box 撰寫規範
 
@@ -362,7 +354,6 @@ version: 1.0.0
 - 營業 CF 與淨利比較（> 1 為佳），自由現金流是否充裕
 
 ---
-version: 1.0.0
 
 ## 步驟五：輸出
 
@@ -374,7 +365,6 @@ version: 1.0.0
    - 一律附上 MOPS 連結，讓用戶可自行核對原始申報
 
 ---
-version: 1.0.0
 
 ## 注意事項
 
